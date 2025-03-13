@@ -1,0 +1,8 @@
+# code: language=ansible
+---
+- name: Include ths sudo role
+  ansible.builtin.include_tasks: sudo.yml
+  tags:
+    - never
+    - sudo
+    - install

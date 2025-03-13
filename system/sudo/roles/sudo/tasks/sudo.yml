@@ -1,0 +1,51 @@
+# code: language=ansible
+---
+- name: Including the block to install SUDO and give the user required permissions
+  tags:
+    - never
+    - sudo
+    - install
+  block:
+    - name: Installer les packet requis
+      ansible.builtin.apt:
+        name: sudo
+        state: present
+
+    - name: Adding the group {{ sudo_user }}
+      ansible.builtin.group:
+        name: "{{ sudo_user }}"
+        state: present
+        system: true
+
+    - name: Making the user {{ sudo_user }}
+      ansible.builtin.user:
+        name: "{{ sudo_user }}"
+        append: true
+        createhome: true
+        system: true
+        groups: "{{ sudo_user }}"
+        state: present
+        shell: /bin/bash
+
+    - name: Adding the {{ sudo_user }}
+      ansible.builtin.shell: |
+        adduser "{{ sudo_user }}" sudo
+        usermod -a -G sudo "{{ sudo_user }}"
+
+    - name: Creation du la ficher authrorized_keys si ca nest existe pas
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        owner: "{{ sudo_user }}"
+        group: "{{ sudo_user }}"
+        state: "{{ item.state }}"
+        mode: "{{ item.mode }}"
+      loop:
+        - {path: "/home/{{ sudo_user }}/.ssh", state: directory, mode: 700}
+        - {path: "/home/{{ sudo_user }}/.ssh/authorized_keys", state: touch, mode: 600}
+
+    - name: Adding in the sudo file ---> {{ sudo_user }}
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: "^%{{ sudo_user }} ALL="
+        line: "%{{ sudo_user }} ALL=(ALL) NOPASSWD: ALL"

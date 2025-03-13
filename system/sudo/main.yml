@@ -1,0 +1,7 @@
+# code: language=ansible
+---
+- name: Installing SUDO fro the user {{ sudo_user }}
+  hosts: server
+  gather_facts: true
+  roles:
+    - sudo
